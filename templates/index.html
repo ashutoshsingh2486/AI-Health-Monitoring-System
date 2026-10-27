@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Health Monitoring</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <div><span class="brand-mark">+</span><span class="brand">Health<span>Sense</span></span></div>
+  <span class="tag">AI-Enabled Monitoring Prototype</span>
+</header>
+<main class="container">
+  <section class="intro">
+    <div>
+      <p class="eyebrow">SMART HEALTH MONITORING & PREDICTION SYSTEM</p>
+      <h1>Health insights, <span>made simpler.</span></h1>
+      <p class="sub">Enter sample health readings, review trends in saved records, and see demo alerts generated from configurable thresholds and an ML model.</p>
+    </div>
+    <div class="pulse-card"><div class="pulse-icon">♡</div><div><strong>Live Demo</strong><small>Manual / sample data</small></div><span class="live-dot"></span></div>
+  </section>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}{% endif %}
+  {% endwith %}
+
+  <section class="stats">
+    <article class="stat-card"><span class="stat-icon blue">⌁</span><div><p>Total readings</p><h2>{{ total }}</h2><small>Saved in local SQLite database</small></div></article>
+    <article class="stat-card"><span class="stat-icon orange">!</span><div><p>Readings with alerts</p><h2>{{ alerts_count }}</h2><small>Based on demo thresholds</small></div></article>
+    <article class="stat-card"><span class="stat-icon green">✚</span><div><p>Latest model output</p><h2 class="risk-title">{{ latest['risk_label'] if latest else '—' }}</h2><small>Educational ML prediction</small></div></article>
+  </section>
+
+  <section class="content-grid">
+    <article class="panel">
+      <div class="panel-heading"><div><p class="eyebrow">DATA ACQUISITION</p><h2>Add a health reading</h2></div><span class="step">01 / INPUT</span></div>
+      <form action="{{ url_for('add_reading') }}" method="post" class="reading-form">
+        <label>Heart rate <span>(bpm)</span><input type="number" name="heart_rate" min="20" max="250" value="76" required></label>
+        <label>SpO₂ <span>(%)</span><input type="number" name="spo2" min="50" max="100" step="0.1" value="98" required></label>
+        <label>Body temperature <span>(°C)</span><input type="number" name="temperature" min="25" max="45" step="0.1" value="36.7" required></label>
+        <label>Systolic BP <span>(mmHg)</span><input type="number" name="systolic_bp" min="50" max="280" value="118" required></label>
+        <label>Diastolic BP <span>(mmHg)</span><input type="number" name="diastolic_bp" min="30" max="180" value="78" required></label>
+        <button class="btn primary" type="submit">＋ Analyse & save reading</button>
+      </form>
+      <div class="form-footer">Values are stored locally in SQLite. No sensor is connected in this demo.</div>
+    </article>
+    <article class="panel workflow">
+      <div class="panel-heading"><div><p class="eyebrow">SYSTEM PIPELINE</p><h2>How it works</h2></div><span class="step">02 / ANALYSIS</span></div>
+      <div class="flow-step"><span>1</span><div><strong>Data acquisition</strong><small>Manual entry or sample readings</small></div></div>
+      <div class="flow-line"></div>
+      <div class="flow-step"><span>2</span><div><strong>Preprocessing</strong><small>Numeric validation and range checks</small></div></div>
+      <div class="flow-line"></div>
+      <div class="flow-step"><span>3</span><div><strong>ML + threshold rules</strong><small>Random Forest demo model and alerts</small></div></div>
+      <div class="flow-line"></div>
+      <div class="flow-step"><span>4</span><div><strong>Storage & dashboard</strong><small>SQLite history and summary cards</small></div></div>
+      <a class="btn secondary" href="{{ url_for('load_demo') }}">Load 3 sample readings</a>
+    </article>
+  </section>
+
+  <section class="panel history-panel">
+    <div class="panel-heading"><div><p class="eyebrow">MONITORING HISTORY</p><h2>Recent readings</h2></div><span class="step">03 / HISTORY</span></div>
+    {% if readings %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Recorded at</th><th>Heart rate</th><th>SpO₂</th><th>Temp.</th><th>Blood pressure</th><th>ML output</th><th>Alert</th></tr></thead>
+      <tbody>{% for r in readings %}
+      <tr><td>{{ r['recorded_at'] }}</td><td>{{ r['heart_rate']|round(1) }} bpm</td><td>{{ r['spo2']|round(1) }}%</td><td>{{ r['temperature']|round(1) }} °C</td><td>{{ r['systolic_bp']|int }}/{{ r['diastolic_bp']|int }}</td><td><span class="pill {{ 'warning' if r['risk_label'] == 'Needs Attention' else 'normal' }}">{{ r['risk_label'] }}</span></td><td>{% if r['alerts'] %}<span class="alert-text">⚠ {{ r['alerts'] }}</span>{% else %}<span class="ok-text">No demo alert</span>{% endif %}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="empty"><div>⌁</div><strong>No readings yet</strong><p>Add a reading or load sample data to see the monitoring history.</p></div>{% endif %}
+    <form action="{{ url_for('clear') }}" method="post" class="clear-form" onsubmit="return confirm('Clear all demo readings?')"><button type="submit" class="text-button">Clear demo history</button></form>
+  </section>
+
+  <aside class="disclaimer"><strong>Important project limitation</strong><p>This is an academic prototype using manually entered/sample data and synthetic training data. It is not medically validated, does not provide diagnosis, and must not be used to make healthcare decisions. Seek qualified medical care for health concerns.</p></aside>
+  <footer>AI-Enabled Smart Health Monitoring & Prediction System · B.Tech CSE (AI & ML) Mini Project</footer>
+</main>
+</body>
+</html>
